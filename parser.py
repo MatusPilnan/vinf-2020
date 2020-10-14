@@ -10,7 +10,7 @@ def close_files(d: dict):
             close_files(v)
         else:
             try:
-                print(f'Closing file {f.name}')
+                print(f'Closing file {v.name}')
                 v.close()
             except:
                 print(f'Cant close file: {v}')
@@ -64,7 +64,7 @@ for file in files:
 
                 for r in result:
                     try:
-                        target_file.write(f'{r["page_id"]},{r["page_title"]}\n')
+                        target_file.write(f'{r["page_id"]}\t{r["page_title"]}\n')
                     except (KeyError, NameError):
                         try:
                             target_file = langlink_files[lang][r['target_lang']]
@@ -77,6 +77,6 @@ for file in files:
                             except KeyError:
                                 langlink_files[lang] = dict()
                                 langlink_files[lang][r['target_lang']] = target_file
-                        target_file.write(f'{r["page_id"]},{r["target_title"]}\n')
+                        target_file.write(f'{r["page_id"]}\t{r["target_title"]}\n')
     close_files(page_files)
     close_files(langlink_files)
