@@ -1,4 +1,6 @@
+import datetime
 import glob
+import json
 import os
 
 from parse import compile
@@ -38,6 +40,7 @@ files = get_filenames(path, '.sql')
 # files = ['wikipedia_dumps\\skwiki-latest-page.sql']
 page_files = dict()
 langlink_files = dict()
+languages = set()
 
 for file in files:
     print(f'parsing {file}...')
@@ -68,6 +71,7 @@ for file in files:
                     except (KeyError, NameError):
                         try:
                             target_file = langlink_files[lang][r['target_lang']]
+                            languages.add(r['target_lang'])
                         except KeyError:
                             os.makedirs(f'csv/{tablename}/{lang}', exist_ok=True)
                             target_file = open(f'csv/{tablename}/{lang}/to_{r["target_lang"]}.csv', 'w',
@@ -80,3 +84,13 @@ for file in files:
                         target_file.write(f'{r["page_id"]}\t{r["target_title"]}\n')
     close_files(page_files)
     close_files(langlink_files)
+with open('info.json') as info_file:
+    try:
+        info = json.load(info_file)
+    except json.decoder.JSONDecodeError:
+        info = {}
+
+with open('info.json', 'w') as info_file:
+    info['lastParse'] = datetime.datetime.now().timestamp()
+    info['allLangs'] = list(languages)
+    json.dump(info, info_file, indent=2)
