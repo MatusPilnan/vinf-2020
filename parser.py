@@ -34,7 +34,7 @@ path = 'wikipedia_dumps\\'
 
 filename_parser = compile(path + '{lang}wiki-latest-{tablename}.sql')
 page_parser = compile("({page_id:d},{namespace:d},'{page_title}',{rest})")
-langlink_parser = compile("({page_id:d},'{target_lang}','{target_title}')")
+langlink_parser = compile("({page_id:d},{target_lang},{target_title})")
 
 files = get_filenames(path, '.sql')
 # files = ['wikipedia_dumps\\skwiki-latest-page.sql']
@@ -69,19 +69,21 @@ for file in files:
                     try:
                         target_file.write(f'{r["page_id"]}\t{r["page_title"]}\n')
                     except (KeyError, NameError):
+                        target_lang = r['target_lang'].strip("'")
                         try:
-                            target_file = langlink_files[lang][r['target_lang']]
-                            languages.add(r['target_lang'])
+                            target_file = langlink_files[lang][target_lang]
+                            languages.add(target_lang)
                         except KeyError:
                             os.makedirs(f'csv/{tablename}/{lang}', exist_ok=True)
-                            target_file = open(f'csv/{tablename}/{lang}/to_{r["target_lang"]}.csv', 'w',
+                            target_file = open(f'csv/{tablename}/{lang}/to_{target_lang}.csv', 'w',
                                                encoding='utf8')
                             try:
-                                langlink_files[lang][r['target_lang']] = target_file
+                                langlink_files[lang][target_lang] = target_file
                             except KeyError:
                                 langlink_files[lang] = dict()
-                                langlink_files[lang][r['target_lang']] = target_file
-                        target_file.write(f'{r["page_id"]}\t{r["target_title"]}\n')
+                                langlink_files[lang][target_lang] = target_file
+                        target_title = r['target_title'].strip("'")
+                        target_file.write(f'{r["page_id"]}\t{target_title}\n')
     close_files(page_files)
     close_files(langlink_files)
 with open('info.json') as info_file:

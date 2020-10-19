@@ -32,7 +32,7 @@ def translate(input, lang_from, lang_to):
         translation = find_translated_title(page_id, lang_from, lang_to)
         return translation
     except KeyError:
-        exit(f'Page {real_title.replace("_", " ")} ({lang_from}) not found in language {lang_to}')
+        exit(f'Page {real_title.replace("_", " ")} ({lang_from}, ID: {page_id}) not found in language {lang_to}')
 
 
 @measure_execution_time(timer_enabled)

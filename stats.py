@@ -86,7 +86,7 @@ def compute_stats():
 
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Get statistics')
-    group = arg_parser.add_mutually_exclusive_group(required=True)
+    group = arg_parser.add_argument_group(title='Outputs', description='Specify desired outputs')
     group.add_argument('-b', '--backlinks', action='store_true', help='Check backlinks')
     group.add_argument('-s', '--stats', action='store_true', help='Show statistics')
 
