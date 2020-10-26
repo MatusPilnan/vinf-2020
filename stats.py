@@ -92,6 +92,10 @@ if __name__ == '__main__':
 
     args = arg_parser.parse_args()
 
+    if not args.backlinks and not args.stats:
+        print('No output selected.')
+        arg_parser.print_help()
+
     if args.backlinks:
         check_backlinks()
 

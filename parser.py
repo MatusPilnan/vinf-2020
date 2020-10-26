@@ -14,6 +14,7 @@ start_time = None
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Parse wikipedia SQL dumps')
     arg_parser.add_argument('-p', '--pages_only', help='Only parse pages', action='store_true')
+    arg_parser.add_argument('-l', '--langlinks_only', help='Only parse langlinks', action='store_true')
     arg_parser.add_argument('-t', '--time', help='Whether to time the execution', action='store_true')
 
     args = arg_parser.parse_args()
@@ -54,14 +55,15 @@ langlink_parser = compile("({page_id:d},{target_lang},{target_title})")
 files = get_filenames(path, '.sql')
 os.makedirs(INDEX_DIR, exist_ok=True)
 
-if os.path.exists(INDEX_DIR):
-    input('Index directory already exists. If you want to continue and discard existing index, press Enter.')
-
 idx_page = dict()
 page_writers = dict()
-for lang in MAIN_LANGS:
-    idx_page[lang] = create_in(INDEX_DIR, page_schema, indexname=index_name(lang))
-    page_writers[lang] = idx_page[lang].writer(procs=4, limitmb=256)
+if not args.langlinks_only:
+    if os.path.exists(INDEX_DIR):
+        input('Index directory already exists. If you want to continue and discard existing index, press Enter.')
+
+    for lang in MAIN_LANGS:
+        idx_page[lang] = create_in(INDEX_DIR, page_schema, indexname=index_name(lang))
+        page_writers[lang] = idx_page[lang].writer(procs=4, limitmb=256)
 page_files = dict()
 langlink_files = dict()
 languages = set()
@@ -72,6 +74,8 @@ for file in files:
     lang = filename_result['lang']
     tablename = filename_result['tablename']
     if tablename == 'page':
+        if args.langlinks_only:
+            continue
         parser = page_parser
     else:
         if args.pages_only:
@@ -123,7 +127,8 @@ with open('info.json') as info_file:
 
 with open('info.json', 'w') as info_file:
     info['lastParse'] = datetime.datetime.now().timestamp()
-    info['allLangs'] = list(languages)
+    if not args.pages_only:
+        info['allLangs'] = list(languages)
     json.dump(info, info_file, indent=2)
 
 if start_time:
