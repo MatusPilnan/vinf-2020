@@ -4,7 +4,7 @@ from pprint import pprint
 
 import pandas as pd
 
-MAIN_LANGS = ['cs', 'fi', 'sk']
+from common import MAIN_LANGS
 
 
 def available_langs():
