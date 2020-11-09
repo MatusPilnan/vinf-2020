@@ -63,7 +63,7 @@ if not args.langlinks_only:
 
     for lang in MAIN_LANGS:
         idx_page[lang] = create_in(INDEX_DIR, page_schema, indexname=index_name(lang))
-        page_writers[lang] = idx_page[lang].writer(procs=4, limitmb=256)
+        page_writers[lang] = idx_page[lang].writer(limitmb=1024)
 page_files = dict()
 langlink_files = dict()
 languages = set()
@@ -117,8 +117,11 @@ for file in files:
                         target_file.write(f'{r["page_id"]}\t{target_title}\n')
     close_files(page_files)
     close_files(langlink_files)
-for page_writer in page_writers.values():
+for key, page_writer in page_writers.items():
+    print(f'Comitting writer {key}...')
     page_writer.commit()
+    print(f'Writer {key} committed.')
+
 with open('info.json') as info_file:
     try:
         info = json.load(info_file)

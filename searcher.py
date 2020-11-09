@@ -35,9 +35,11 @@ def translate(input_title, lang_from, lang_to, page_index=None):
         page_index = load_index(PAGE_IDX_NAME)
     check_target_lang(lang_from, lang_to)
     title = preprocess(input_title)
-    pages = find_page_id(title, page_index)
-    if not pages:
-        exit(f'Page {input_title} not found in {lang_from}wiki.')
+    pages = []
+    try:
+        pages = find_page_id(title, page_index)
+    except ValueError as e:
+        exit(f'Page {input_title} not found in {lang_from}wiki.\n{e}')
     translation = find_translated_title(pages, lang_from, lang_to)
     return translation
 
@@ -59,6 +61,9 @@ def find_page_id(title, idx):
     with idx.searcher() as searcher:
         parser = QueryParser('title', schema=page_schema)
         results = searcher.search(parser.parse(title))
+        if not results:
+            suggestion = searcher.correct_query(parser.parse(title), title)
+            raise ValueError(f"Did you mean: {suggestion.string}?")
         return [tuple(r.values()) for r in results]
 
 

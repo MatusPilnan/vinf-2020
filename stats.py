@@ -3,8 +3,9 @@ import json
 from pprint import pprint
 
 import pandas as pd
+from whoosh import index
 
-from common import MAIN_LANGS
+from common import MAIN_LANGS, INDEX_DIR, index_name
 
 
 def available_langs():
@@ -84,15 +85,28 @@ def compute_stats():
     return stats
 
 
+def load_index(name):
+    return index.open_dir(INDEX_DIR, name)
+
+
+def term_frequency():
+    for lang in MAIN_LANGS:
+        idx = load_index(index_name(lang))
+        with idx.reader() as reader:
+            yield lang, reader.most_frequent_terms('title',
+                                                   number=10), None  # reader.most_distinctive_terms('title', 10)
+
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Get statistics')
     group = arg_parser.add_argument_group(title='Outputs', description='Specify desired outputs')
     group.add_argument('-b', '--backlinks', action='store_true', help='Check backlinks')
     group.add_argument('-s', '--stats', action='store_true', help='Show statistics')
+    group.add_argument('-t', '--term_frequency', action='store_true', help='Show statistics')
 
     args = arg_parser.parse_args()
 
-    if not args.backlinks and not args.stats:
+    if not args.backlinks and not args.stats and not args.term_frequency:
         print('No output selected.')
         arg_parser.print_help()
 
@@ -102,3 +116,11 @@ if __name__ == '__main__':
     if args.stats:
         pd.set_option('display.max_colwidth', 20)
         print(compute_stats())
+
+    if args.term_frequency:
+        for lang, tf, dist in term_frequency():
+            print(f'10 Most frequent terms {lang}wiki pages')
+            df_tf = pd.DataFrame(data=tf, columns=['Collection frequency', 'Term'])
+            # df_dist = pd.DataFrame(data=dist, columns=['TF*IDF', 'Term'])
+            print(df_tf)
+            # print(df_dist)

@@ -7,7 +7,7 @@ PAGE_IDX_NAME = 'page_idx'
 MAIN_LANGS = ['cs', 'fi', 'sk']
 
 analyzer = StandardAnalyzer() | CharsetFilter(accent_map)
-page_schema = Schema(id=NUMERIC(stored=True), title=TEXT(stored=True, analyzer=analyzer))
+page_schema = Schema(id=NUMERIC(stored=True), title=TEXT(stored=True, analyzer=analyzer, spelling=True))
 
 
 def measure_execution_time(enabled):
