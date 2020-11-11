@@ -1,3 +1,4 @@
 whoosh
 parse
 pandas
+tqdm

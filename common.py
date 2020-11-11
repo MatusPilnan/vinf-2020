@@ -6,7 +6,9 @@ INDEX_DIR = 'indexdir'
 PAGE_IDX_NAME = 'page_idx'
 MAIN_LANGS = ['cs', 'fi', 'sk']
 
+# Tokenize and lowercase the input and remove accents
 analyzer = StandardAnalyzer() | CharsetFilter(accent_map)
+# Whoosh index schema - store ID and original page title, analyze title using above analyzer
 page_schema = Schema(id=NUMERIC(stored=True), title=TEXT(stored=True, analyzer=analyzer, spelling=True))
 
 
@@ -29,4 +31,9 @@ def measure_execution_time(enabled):
 
 
 def index_name(lang):
+    """
+    Builds index name string from language code
+    :param lang: Language code
+    :return: A string representing Whoosh index title
+    """
     return f'{lang}_{PAGE_IDX_NAME}'
