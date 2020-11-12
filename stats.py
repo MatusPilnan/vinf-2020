@@ -79,7 +79,7 @@ def compute_stats():
 
     Also counts average and maximum number of translations to other languages from
     main languages and language with most translations, as well as number of different languages
-    that main language pages are translated into.
+    that main language pages are translated into and number of pages translated between main languages.
 
     :returns: A DataFrame with statistics
     """
@@ -109,9 +109,14 @@ def compute_stats():
                 lang_stats.at[lang_to, lang_from] = None
 
     stats = stats.append(lang_stats.describe().loc[['count', 'mean', 'max'], :])
-    stats.rename(index={'count': 'translation_languages_count',
-                        'mean': 'average_translations',
-                        'max': 'most_translations'}, inplace=True)
+    main_lang_matrix = lang_stats.loc[MAIN_LANGS, :]
+    stats = stats.append(main_lang_matrix)
+    renaming = {'count': 'translation_languages_count',
+                'mean': 'average_translations',
+                'max': 'most_translations'}
+    for language in MAIN_LANGS:
+        renaming[language] = f'to_lang_{language}'
+    stats.rename(index=renaming, inplace=True)
     stats.loc['most_translated_language', :] = lang_stats.idxmax(skipna=True)
     return stats
 
@@ -158,8 +163,11 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     if not args.backlinks and not args.stats and not args.term_frequency and not args.multiple_occ:
-        print('No output selected.')
-        arg_parser.print_help()
+        print('No output selected. Computing everything.')
+        args.backlinks = True
+        args.stats = True
+        args.term_frequency = True
+        args.multiple_occ = True
 
     if args.backlinks:
         check_backlinks()
