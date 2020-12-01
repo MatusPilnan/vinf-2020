@@ -5,6 +5,7 @@ import pandas as pd
 from whoosh import index
 from whoosh.qparser import QueryParser
 
+import elastic_searcher
 from common import measure_execution_time, INDEX_DIR, PAGE_IDX_NAME, page_schema, MAIN_LANGS, index_name
 
 timer_enabled = False
@@ -12,11 +13,13 @@ args = None
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Find a translation')
     arg_parser.add_argument('input', help='Input term to be translated')
-    arg_parser.add_argument('lang_from', choices=MAIN_LANGS, help='Language of the input')
+    arg_parser.add_argument('lang_from',
+                            help=f'Language code of the input. Should be one of {MAIN_LANGS} unless "-e" is also specified.')
     arg_parser.add_argument('lang_to', help='Code of target language')
     arg_parser.add_argument('-n', '--namespaces', help='Leave translated pages with namespace prefixes in output',
                             action='store_true')
     arg_parser.add_argument('-t', '--time', help='Whether to time the execution', action='store_true')
+    arg_parser.add_argument('-e', '--elastic', help='Use Elasticsearch index', action='store_true')
     arg_parser.add_argument('--show_not_found', action='store_true', help='Show a list of pages that could not be '
                                                                           'translated')
 
@@ -138,8 +141,17 @@ def discard_namespace(row):
 
 
 if __name__ == '__main__':
-    page_idx = load_index(index_name(args.lang_from))
-    results = translate(args.input, args.lang_from, args.lang_to, page_idx)
+    results = None
+    if args.elastic:
+        try:
+            results = elastic_searcher.translate(args.input, args.lang_from, args.lang_to)
+        except ValueError as e:
+            exit(e)
+    else:
+        if args.lang_from not in MAIN_LANGS:
+            exit(f'lang_from should be one of {MAIN_LANGS} unless "-e" is also specified. It was: {args.lang_from}')
+        page_idx = load_index(index_name(args.lang_from))
+        results = translate(args.input, args.lang_from, args.lang_to, page_idx)
     # Save correctly translated entries
     good_matches = results.dropna()
     if not args.namespaces:

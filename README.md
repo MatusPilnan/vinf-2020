@@ -225,3 +225,27 @@ Tieto slová sa vyskytujú v tabuľke `page` na konci názvu za znakom \~. V
 dokumentácii sme o ich význame nič nenašli, no domnievame sa, že ide o
 názvy stránok používateľov, ktoré musia byť rozlíšené naprieč rôznymi
 jazykovými mutáciami Wikipedie.
+
+
+## Bonus
+V rámci bonusovej úlohy sme riešili uloženie všetkých údajov v jednom indexe, bez potreby prehľadávania ďalších .csv súborov.
+Dokument v tomto indexe obsahuje:
+  - `original_title` - názov stránky v pôvodnom jazyku (jeden z hlavných jazykov) - pole analyzované ako text,
+  - `translated` - preklad názvu - pole analyzované ako text,
+  - `source_lang` - kód pôvodného jazyka - neanalyzované pole,
+  - `target_lang` - kód jazyka prekladu - neanalyzované pole.
+  
+Takýchto dokumentov pri parsovaní šiestich SQL dumpov vznikne vyše 15 miliónov, na čo už knižnica whoosh nestačí (samotné 
+vytvorenie indexu by trvalo minimálne 9 hodín), preto sme sa rozhodli tento index vytvárať s pomocou Elasticsearch.
+V indexe sa používa upravený štandardný analyzér, ktorý okrem prevodu vstupu na malé písmená a rozdelenia na tokeny
+odstráni zo vstupu diakritiku.
+
+Parsovanie prebieha podobne ako v pôvodnom riešení - prvý krok je rozdelenie SQL dumpov na menšie .csv súbory, ktoré je možné 
+postupne spracovať. Po vytvorení týchto súborov sa začne vytváranie Elasticsearch indexu.
+Pre každý zo základných jazykov sa zo súborov načítjú všetky preklady, pridá sa k nim pôvodný názov a jazykové kódy. 
+Takto vytvorené dokumenty sa následne indexujú pomocou Elasticsearch Bulk API.
+
+Vyhľadávanie je jednoduché: pre zadaný vstup a jazyky sa vyskladá dopyt, ktorý vyhľadá zadaný názov v poli `original_title` a
+súčasne musia sedieť kódy jazykov. Zaujímavosťou je, že takýto index nám dal možnosť prekladať stránky aj zo všetkých 
+nájdených jazykov do troch hlavných. V tomto prípade sa dopytujeme na názov v poli `translated`, jazyk vstupu v poli `target_lang`
+a požadovaný jazyk v poli `source_lang`.

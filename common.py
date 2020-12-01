@@ -11,6 +11,11 @@ analyzer = StandardAnalyzer() | CharsetFilter(accent_map)
 # Whoosh index schema - store ID and original page title, analyze title using above analyzer
 page_schema = Schema(id=NUMERIC(stored=True), title=TEXT(stored=True, analyzer=analyzer, spelling=True))
 
+one_index_schema = Schema(original_title=TEXT(stored=True, analyzer=analyzer, spelling=True),
+                          source_lang=KEYWORD,
+                          target_lang=KEYWORD,
+                          translated=TEXT(stored=True))
+
 
 def measure_execution_time(enabled):
     def execution_time(func):
